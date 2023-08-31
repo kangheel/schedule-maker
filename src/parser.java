@@ -26,11 +26,25 @@ public class parser {
         int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
         // System.out.println(dayOfWeek);
 
-        int firstSat = (7-dayOfWeek)+1;
-        int firstSun = firstSat + 1;
+        boolean sunFirst = false;
+        if (dayOfWeek == 1) {
+            sunFirst = true;
+        }
+
+        int firstSat;
+        int firstSun;
+
+        if (! sunFirst) {
+            firstSat = (7-dayOfWeek)+1;
+            firstSun = firstSat + 1;
+        }
+        else {
+            firstSat = (7-dayOfWeek)+1;
+            firstSun = 1;
+        }
 
         YearMonth cal = YearMonth.of(year, month);
-        int daysInMonth = cal.lengthOfMonth();  
+        int daysInMonth = cal.lengthOfMonth();
 
         // Export
         PrintWriter exportFile = new PrintWriter("./export/"+(month < 10 ? "0"+month : month)+"_"+year+"_schedule.csv");
@@ -82,28 +96,55 @@ public class parser {
         int satCount = 0;
         int sunCount = 0;
         while (true) {
-            if (firstSat <= daysInMonth) {
-                firstLine += firstSat+",";
-                firstLine += firstSat+",";
-                firstSat += 7;
-                secondLine += "Sat,Sat,";
-                thirdLine += "5:00 PM,8:00 PM,";
-                satCount++;
+            if (! sunFirst) {
+                if (firstSat <= daysInMonth) {
+                    firstLine += firstSat+",";
+                    firstLine += firstSat+",";
+                    firstSat += 7;
+                    secondLine += "Sat,Sat,";
+                    thirdLine += "5:00 PM,8:00 PM,";
+                    satCount++;
+                }
+                else {
+                    break;
+                }
+                if (firstSun <= daysInMonth) {
+                    firstLine += firstSun+",";
+                    firstLine += firstSun+",";
+                    firstLine += firstSun+",";
+                    secondLine += "Sun,Sun,Sun,";
+                    firstSun += 7;
+                    thirdLine += "8:00 AM,9:30 AM,12:30 PM,";
+                    sunCount++;
+                }
+                else {
+                    break;
+                }
             }
             else {
-                break;
-            }
-            if (firstSun <= daysInMonth) {
-                firstLine += firstSun+",";
-                firstLine += firstSun+",";
-                firstLine += firstSun+",";
-                secondLine += "Sun,Sun,Sun,";
-                firstSun += 7;
-                thirdLine += "8:00 AM,9:30 AM,12:30 PM,";
-                sunCount++;
-            }
-            else {
-                break;
+                if (firstSun <= daysInMonth) {
+                    firstLine += firstSun+",";
+                    firstLine += firstSun+",";
+                    firstLine += firstSun+",";
+                    secondLine += "Sun,Sun,Sun,";
+                    firstSun += 7;
+                    thirdLine += "8:00 AM,9:30 AM,12:30 PM,";
+                    sunCount++;
+                }
+                else {
+                    break;
+                }
+                if (firstSat <= daysInMonth) {
+                    firstLine += firstSat+",";
+                    firstLine += firstSat+",";
+                    firstSat += 7;
+                    secondLine += "Sat,Sat,";
+                    thirdLine += "5:00 PM,8:00 PM,";
+                    satCount++;
+                }
+                else {
+                    break;
+                }
             }
         }
         exportFile.println(firstLine);
@@ -136,13 +177,24 @@ public class parser {
             String cur = group_names[j]+",";
             for (int l = 0; l < satCount; l++) {
                 for (int k = 0; k < size; k++) {
-                    if (k == 0) curSat++;
-                    if (k == 2) curSun++;
-                    if (curSat > satCount || curSun > sunCount) {
-                        break;
+                    if (! sunFirst) {
+                        if (k == 0) curSat++;
+                        if (k == 2) curSun++;
+                        if (curSat > satCount || curSun > sunCount) {
+                            break;
+                        }
+                        int pos = chosen_perms[curSat-1].charAt(k)-'0';
+                        cur += member_names[j*size+pos]+",";
                     }
-                    int pos = chosen_perms[curSat-1].charAt(k)-'0';
-                    cur += member_names[j*size+pos]+",";
+                    else {
+                        if (k == 0) curSun++;
+                        if (k == 3) curSat++;
+                        if (curSun > sunCount || curSat > satCount) {
+                            break;
+                        }
+                        int pos = chosen_perms[curSun-1].charAt(k)-'0';
+                        cur += member_names[j*size+pos]+",";
+                    }
                 }
             }
             exportFile.println(cur);
